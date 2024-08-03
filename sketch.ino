@@ -1,4 +1,5 @@
 #include <Keypad.h>
+#include <LedControl.h>
 
 // Keypad configuration
 const byte ROWS = 4;
@@ -15,6 +16,10 @@ byte rowPins[ROWS] = { 28, 27, 26, 22 };
 
 // Create Keypad object
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+
+// Create LedControl object
+// Parameters: DIN pin, CLK pin, LOAD pin, number of displays
+LedControl lc = LedControl(12, 11, 10, 4);
 
 void setup() {
   // Initialize Serial1 communication at 115200 baud rate
@@ -43,6 +48,11 @@ void setup() {
 
   // Give some time for the keypad to stabilize
   delay(500);
+
+  // Initialize the LedControl library
+  lc.shutdown(0, false); // Wake up the display
+  lc.setIntensity(0, 8); // Set the brightness to a medium value
+  lc.clearDisplay(0);    // Clear the display
 }
 
 void loop() {
@@ -50,6 +60,7 @@ void loop() {
   char key = keypad.getKey();
   if (key != NO_KEY) {
     Serial1.println(key);
+    displayKey(key); // Display the key on the LED display
   }
 
   // Print the states of the row pins
@@ -70,4 +81,17 @@ void loop() {
 
   // Delay for 500 ms to make it readable
   delay(500);
+}
+
+void displayKey(char key) {
+  // Convert the key to a digit
+  int digit = -1;
+  if (key >= '0' && key <= '9') {
+    digit = key - '0';
+  }
+
+  // Display the digit on the LED display
+  if (digit != -1) {
+    lc.setDigit(0, 0, digit, false); // Display the digit on the first display, first digit
+  }
 }
