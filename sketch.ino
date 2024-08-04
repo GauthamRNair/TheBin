@@ -164,11 +164,11 @@ void printBufferLong() {
     byte y = x;                             // Mask off first character
     lc.setRow(3, a, y);                     // Send row to relevent MAX7219 chip
     x = bufferLong [a * 2];                 // Get low buffer entry
-    y = (x >> 24);                          // Mask off second character
+    y = (x >> 32);                          // Mask off second character
     lc.setRow(2, a, y);                     // Send row to relevent MAX7219 chip
-    y = (x >> 16);                          // Mask off third character
+    y = (x >> 32);                          // Mask off third character
     lc.setRow(1, a, y);                     // Send row to relevent MAX7219 chip
-    y = (x >> 8);                           // Mask off forth character
+    y = (x >> 16);                           // Mask off forth character
     lc.setRow(0, a, y);                     // Send row to relevent MAX7219 chip
   }
 }
