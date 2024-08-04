@@ -26,7 +26,8 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 LedControl lc = LedControl(DATA_PIN, CLK_PIN, CS_PIN, 4);
 
 unsigned long bufferLong [14] = {0};
-const unsigned char scrollText[] PROGMEM = {"     SOUNDTOY      "};
+const unsigned char scrollText[] PROGMEM = {"     SOUNDTOY!      "};
+bool scrolling = false;
 
 
 void setup() {
@@ -116,23 +117,29 @@ void scrollFont() {
 
 // Scroll Message
 void scrollMessage(const unsigned char * messageString) {
+  if(scrolling) {
+    return;
+  }
+  scrolling = true;
+  int myChar = 0;
+  while (myChar != 0){
+    Serial1.print("Hmm?");
+    myChar = 0;
     int counter = 0;
-    int myChar = 0;
-    do {
-      // read back a char
-      myChar =  pgm_read_byte_near(messageString + counter);
-      if (myChar != 0) {
-        loadBufferLong(myChar);
-      }
-      counter++;
+    // read back a char
+    myChar =  pgm_read_byte_near(messageString + counter);
+    if (myChar != 0) {
+      loadBufferLong(myChar);
     }
-    while (myChar != 0);
+    counter++;
+  } 
+  scrolling = false;
 }
 // Load character into scroll buffer
 void loadBufferLong(int ascii) {
   if (ascii >= 0x20 && ascii <= 0x7f) {
     for (int a = 0; a < 7; a++) {               // Loop 7 times for a 5x7 font
-      unsigned long c = pgm_read_byte_near(font5x7 + ((ascii - 0x20) * 8) + (6-a));     // Index into character table to get row data
+      unsigned long c = pgm_read_byte_near(font5x7 + ((ascii - 0x20) * 8) + a);     // Index into character table to get row data
       unsigned long x = bufferLong [a * 2];   // Load current scroll buffer
       x = x | c;                              // OR the new character onto end of current
       bufferLong [a * 2] = x;                 // Store in buffer
@@ -162,14 +169,26 @@ void rotateBufferLong() {
 void printBufferLong() {
   for (int a = 0; a < 7; a++) {             // Loop 7 times for a 5x7 font
     unsigned long x = bufferLong [a * 2 + 1]; // Get high buffer entry
-    byte y = x;                             // Mask off first character
+    byte y = (x);
+    y = (y & 0xF0) >> 4 | (y & 0x0F) << 4;
+    y = (y & 0xCC) >> 2 | (y & 0x33) << 2;
+    y = (y & 0xAA) >> 1 | (y & 0x55) << 1;                             // Mask off first character
     lc.setRow(3, a, y);                     // Send row to relevent MAX7219 chip
     x = bufferLong [a * 2];                 // Get low buffer entry
-    y = (x >> 8);                          // Mask off second character
+    y = (x >> 24);
+    y = (y & 0xF0) >> 4 | (y & 0x0F) << 4;
+    y = (y & 0xCC) >> 2 | (y & 0x33) << 2;
+    y = (y & 0xAA) >> 1 | (y & 0x55) << 1;                          // Mask off second character
     lc.setRow(2, a, y);                     // Send row to relevent MAX7219 chip
-    y = (x >> 16);                          // Mask off third character
+    y = (x >> 16);
+    y = (y & 0xF0) >> 4 | (y & 0x0F) << 4;
+    y = (y & 0xCC) >> 2 | (y & 0x33) << 2;
+    y = (y & 0xAA) >> 1 | (y & 0x55) << 1;                          // Mask off third character
     lc.setRow(1, a, y);                     // Send row to relevent MAX7219 chip
-    y = (x >> 24);                           // Mask off forth character
+    y = (x >> 8);
+    y = (y & 0xF0) >> 4 | (y & 0x0F) << 4;
+    y = (y & 0xCC) >> 2 | (y & 0x33) << 2;
+    y = (y & 0xAA) >> 1 | (y & 0x55) << 1;                           // Mask off forth character
     lc.setRow(0, a, y);                     // Send row to relevent MAX7219 chip
   }
 }
