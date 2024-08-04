@@ -27,8 +27,8 @@ LedControl lc = LedControl(DATA_PIN, CLK_PIN, CS_PIN, 4);
 
 unsigned long bufferLong [14] = {0};
 const unsigned char scrollText[] PROGMEM = {"     SOUNDTOY!      "};
-bool scrolling = false;
 
+bool justStarted = true;
 
 void setup() {
   // Set the pin mode
@@ -69,6 +69,8 @@ void loop() {
     if (buttonRead != buttonState) {
       buttonState = buttonRead;
       if (buttonState == LOW) {
+        justStarted = false;
+        lc.clear();
         toneOn = !toneOn;
       }
     }
@@ -105,35 +107,24 @@ void loop() {
 
   delay(100); // Short delay for stability
 
-  scrollMessage(scrollText);
-}
-
-void scrollFont() {
-  for (int counter = 0x20; counter < 0x80; counter++) {
-    loadBufferLong(counter);
-    delay(500);
+  if(justStarted) {
+    scrollMessage();
   }
 }
 
 // Scroll Message
-void scrollMessage(const unsigned char * messageString) {
-  if(scrolling) {
-    return;
-  }
-  scrolling = true;
+void scrollMessage() {
+  const unsigned char* messageString = scrollText;
   int myChar = 0;
-  while (myChar != 0){
-    Serial1.print("Hmm?");
-    myChar = 0;
-    int counter = 0;
+  int counter = 0;
+  do {
     // read back a char
     myChar =  pgm_read_byte_near(messageString + counter);
     if (myChar != 0) {
       loadBufferLong(myChar);
     }
     counter++;
-  } 
-  scrolling = false;
+  } while (myChar != 0);
 }
 // Load character into scroll buffer
 void loadBufferLong(int ascii) {
