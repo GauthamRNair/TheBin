@@ -28,6 +28,7 @@ LedControl lc = LedControl(DATA_PIN, CLK_PIN, CS_PIN, 4);
 unsigned long bufferLong [14] = {0};
 const unsigned char scrollText[] PROGMEM = {"     SOUNDTOY      "};
 
+
 void setup() {
   // Set the pin mode
   pinMode(BUZZER_PIN, OUTPUT);
@@ -115,23 +116,23 @@ void scrollFont() {
 
 // Scroll Message
 void scrollMessage(const unsigned char * messageString) {
-  int counter = 0;
-  int myChar = 0;
-  do {
-    // read back a char
-    myChar =  pgm_read_byte_near(messageString + counter);
-    if (myChar != 0) {
-      loadBufferLong(myChar);
+    int counter = 0;
+    int myChar = 0;
+    do {
+      // read back a char
+      myChar =  pgm_read_byte_near(messageString + counter);
+      if (myChar != 0) {
+        loadBufferLong(myChar);
+      }
+      counter++;
     }
-    counter++;
-  }
-  while (myChar != 0);
+    while (myChar != 0);
 }
 // Load character into scroll buffer
 void loadBufferLong(int ascii) {
   if (ascii >= 0x20 && ascii <= 0x7f) {
     for (int a = 0; a < 7; a++) {               // Loop 7 times for a 5x7 font
-      unsigned long c = pgm_read_byte_near(font5x7 + ((ascii - 0x20) * 8) + a);     // Index into character table to get row data
+      unsigned long c = pgm_read_byte_near(font5x7 + ((ascii - 0x20) * 8) + (6-a));     // Index into character table to get row data
       unsigned long x = bufferLong [a * 2];   // Load current scroll buffer
       x = x | c;                              // OR the new character onto end of current
       bufferLong [a * 2] = x;                 // Store in buffer
@@ -164,11 +165,11 @@ void printBufferLong() {
     byte y = x;                             // Mask off first character
     lc.setRow(3, a, y);                     // Send row to relevent MAX7219 chip
     x = bufferLong [a * 2];                 // Get low buffer entry
-    y = (x >> 32);                          // Mask off second character
+    y = (x >> 8);                          // Mask off second character
     lc.setRow(2, a, y);                     // Send row to relevent MAX7219 chip
-    y = (x >> 32);                          // Mask off third character
+    y = (x >> 16);                          // Mask off third character
     lc.setRow(1, a, y);                     // Send row to relevent MAX7219 chip
-    y = (x >> 16);                           // Mask off forth character
+    y = (x >> 24);                           // Mask off forth character
     lc.setRow(0, a, y);                     // Send row to relevent MAX7219 chip
   }
 }
